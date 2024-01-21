@@ -692,7 +692,7 @@ int main(int argc, char* argv[]){
     nsecs_post = cpucycles();   //cpucycles actually doesn't count cycles but counts nanoseconds
     nsecs += (nsecs_post-nsecs_pre);
     
-    printf("%s runs in ......................... %9s ns\n", "mul_RSS_ASS", print_num((double)(nsecs/(BENCH_LOOPS/10))));
+    printf("%s runs in ......................... %9s ns\n", "mul_RSS_ASS ", print_num((double)(nsecs/(BENCH_LOOPS/10))));
 
     nsecs_pre = 0, nsecs_post = 0, nsecs = 0;
 
