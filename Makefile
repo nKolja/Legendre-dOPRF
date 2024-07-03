@@ -1,22 +1,29 @@
 # Makefile
 CC = gcc
 CFLAGS += -Wno-sign-compare -Wno-unused-function -Wall -Wextra -std=gnu11 -Wcomment -O3 -Ofast
-LDFLAGS += -lgmp
+CFLAGS += -I/usr/local/include
+LDFLAGS += -L/usr/local/lib
+LIBS += -lblake3
+
+# CFLAGS += -g -fsanitize=address -ferror-limit=1 		// For debugging
+
+.NOTPARALLEL:
 
 # Optimization flag
 OPT_LEVEL = $(DEFAULT_OPT_LEVEL)
 DEFAULT_OPT_LEVEL = GENERIC
 
+# Alternative primes
+ifeq ($(ALT_PRIMES),ALT)
+PRIMES_VAL=1
+else
+PRIMES_VAL=0
+endif
 
-# Define parameters
-EXECUTABLE0 = main64
-EXECUTABLE1 = main128
-EXECUTABLE2 = main192
-EXECUTABLE3 = main256
-EXECUTABLE4 = main512
 
 # Basic source files
-SRC = main.c random/random.c arith.c bench.c
+SRC = random/random.c arith.c bench.c
+
 
 # Add arithmetic source files
 ifeq ($(OPT_LEVEL),GENERIC)
@@ -34,29 +41,50 @@ SRC512 = $(SRC) p512/arm64/arith_arm512.c p512/arm64/arith_arm512.S
 endif
 
 
-all: main64 main128 main192 main256 main512
+.PHONY: all dOPRF arith clean
+
+all: dOPRF arith
 
 
-main64: $(SRC64)
-	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=0 -o $@ $^
+dOPRF: dOPRF64 dOPRF128 dOPRF192 dOPRF256 dOPRF512
 
-main128: $(SRC128)
-	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=1 -o $@ $^
+arith: arith64 arith128 arith192 arith256 arith512
 
-main192: $(SRC192)
-	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=2 -o $@ $^
 
-main256: $(SRC256)
-	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=3 -o $@ $^
+dOPRF64: main.c $(SRC64) dOPRF.c
+	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=0 -DPRIMES=$(PRIMES_VAL) -o $@ $^ $(LIBS)
 
-main512: $(SRC512)
-	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=4 -o $@ $^
+dOPRF128: main.c $(SRC128) dOPRF.c
+	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=1 -DPRIMES=$(PRIMES_VAL) -o $@ $^ $(LIBS)
+
+dOPRF192: main.c $(SRC192) dOPRF.c
+	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=2 -DPRIMES=$(PRIMES_VAL) -o $@ $^ $(LIBS)
+
+dOPRF256: main.c $(SRC256) dOPRF.c
+	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=3 -DPRIMES=$(PRIMES_VAL) -o $@ $^ $(LIBS)
+
+dOPRF512: main.c $(SRC512) dOPRF.c
+	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=4 -DPRIMES=$(PRIMES_VAL) -o $@ $^ $(LIBS)
+
+
+arith64: arith_tests.c $(SRC64)
+	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=0 -DPRIMES=$(PRIMES_VAL) -o $@ $^ $(LIBS)
+
+arith128: arith_tests.c $(SRC128)
+	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=1 -DPRIMES=$(PRIMES_VAL) -o $@ $^ $(LIBS)
+
+arith192: arith_tests.c $(SRC192)
+	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=2 -DPRIMES=$(PRIMES_VAL) -o $@ $^ $(LIBS)
+
+arith256: arith_tests.c $(SRC256)
+	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=3 -DPRIMES=$(PRIMES_VAL) -o $@ $^ $(LIBS)
+
+arith512: arith_tests.c $(SRC512)
+	$(CC) $(CFLAGS) $(LDFLAGS)  -DSEC_LEVEL=4 -DPRIMES=$(PRIMES_VAL) -o $@ $^ $(LIBS)
 
 
 clean:
-	rm -f main64 main128 main192 main256 main512
-
-
+	rm -f dOPRF64 dOPRF128 dOPRF192 dOPRF256 dOPRF512 arith64 arith128 arith192 arith256 arith512
 
 
 

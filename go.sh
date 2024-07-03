@@ -1,55 +1,37 @@
-#!/bin/zsh
+#!/usr/bin/env bash
 
-if [ -z "$1" ]
-then
-    make clean > /dev/null
-    make > /dev/null
+TARGET="dOPRF"
+BITSIZES=("64" "128" "192" "256" "512")
+FAST="GENERIC"
+TYPE_PRIMES="ORIGINAL"
 
-    ./main64
-    ./main128
-    ./main192
-    ./main256
-    ./main512
-else
-    if [ "$1" = "FAST" ]
-    then
-        make clean > /dev/null
-        make OPT_LEVEL=FAST > /dev/null
-
-        ./main64
-        ./main128
-        ./main192
-        ./main256
-        ./main512
-    elif [[ "$1" =~ "^64$|^128$|^192$|^256$|^512$" ]]
-    then
-        if { [ "$2" = "FAST" ] && [ "$3" = "S" ]; } || { [ "$2" = "S" ] && [ "$3" = "FAST" ]; }        then
-            make clean > /dev/null
-            make main$1 OPT_LEVEL=FAST GENERATE_ASSEMBLY_CODE=YES > /dev/null
-
-            ./main$1
-        elif [ "$2" = "FAST" ]
-        then
-            make clean > /dev/null
-            make main$1 OPT_LEVEL=FAST > /dev/null
-
-            ./main$1
-        elif [ "$2" = "S" ]
-        then
-            make clean > /dev/null
-            make main$1 GENERATE_ASSEMBLY_CODE=YES > /dev/null
-
-            ./main$1
-        else
-            make clean > /dev/null
-            make main$1 > /dev/null
-
-            ./main$1
-        fi
-    else
-        echo "Invalid option. Please use FAST, S or a number from the list: 64, 128, 192, 256, 512."
+for arg in "$@"
+do
+    if [[ "$arg" == "dOPRF" || "$arg" == "arith" ]]; then
+        TARGET="$arg"
+    elif [[ "$arg" =~ ^64$|^128$|^192$|^256$|^512$ ]]; then
+        BITSIZES=("$arg")
+    elif [[ "$arg" == "FAST" ]]; then
+        FAST="$arg"
+    elif [[ "$arg" == "ALT" ]]; then
+        TYPE_PRIMES="$arg"
+    else 
+        echo "Warning: Unknown argument $arg"
+        echo "Accepted arguments are:"
+        echo "  - 'dOPRF' or 'arith' to set the TARGET"
+        echo "  - '64', '128', '192', '256', or '512' to set the BITSIZE"
+        echo "  - 'ALT' to enable alternative prime values"
+        echo "  - 'FAST' to enable ARM assembly"
+        exit 1
     fi
-fi
+done
+
 
 make clean > /dev/null
+for BITSIZE in "${BITSIZES[@]}"
+do
+    make ${TARGET}${BITSIZE} OPT_LEVEL=${FAST} ALT_PRIMES=${TYPE_PRIMES} > /dev/null
+    ./${TARGET}${BITSIZE}
+    make clean > /dev/null
+done
 
